@@ -6,7 +6,7 @@ st.set_page_config(page_title="Prediksi Obesitas", layout="centered")
 st.title(" Prediksi Kategori Obesitas Berdasarkan Gaya Hidup")
 
 # Load pipeline model
-pipeline = joblib.load("model.pkl")
+pipeline = joblib.load("best_rf_model.pkl")
 model = pipeline["model"]
 encoders = pipeline["encoders"]
 target_encoder = pipeline["target_encoder"]
