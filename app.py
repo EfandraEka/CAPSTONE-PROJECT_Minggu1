@@ -6,54 +6,61 @@ st.set_page_config(page_title="Prediksi Obesitas", layout="centered")
 st.title(" Prediksi Kategori Obesitas")
 
 # Load model
-model = joblib.load("best_rf_model.pkl")  # Langsung model RandomForestClassifier
+model = joblib.load("best_rf_model.pkl")  # diasumsikan hanya berisi model
 
 # Input pengguna
-user_input = {
-    "Age": st.slider("Usia", 10, 100, 25),
-    "Gender": st.selectbox("Jenis Kelamin", ["Female", "Male"]),
-    "Height": st.number_input("Tinggi Badan (m)", 1.0, 2.5, 1.70),
-    "Weight": st.number_input("Berat Badan (kg)", 30.0, 200.0, 70.0),
-    "CALC": st.selectbox("Konsumsi Alkohol", ["no", "Sometimes", "Frequently", "Always"]),
-    "FAVC": st.selectbox("Makanan Tinggi Kalori?", ["yes", "no"]),
-    "FCVC": st.slider("Frekuensi Konsumsi Sayur (1-3)", 1, 3, 2),
-    "NCP": st.slider("Jumlah Makan per Hari (1-4)", 1, 4, 3),
-    "SCC": st.selectbox("Monitoring Kalori?", ["yes", "no"]),
-    "SMOKE": st.selectbox("Merokok?", ["yes", "no"]),
-    "CH2O": st.slider("Konsumsi Air (liter/hari)", 1, 3, 2),
-    "family_history_with_overweight": st.selectbox("Riwayat Obesitas Keluarga?", ["yes", "no"]),
-    "FAF": st.slider("Aktivitas Fisik (jam/minggu)", 0, 10, 2),
-    "TUE": st.slider("Waktu Hiburan/Layar (jam/hari)", 0, 5, 1),
-    "CAEC": st.selectbox("Kebiasaan Camilan", ["no", "Sometimes", "Frequently", "Always"]),
-    "MTRANS": st.selectbox("Transportasi", ["Public_Transportation", "Walking", "Automobile", "Motorbike", "Bike"])
-}
+with st.form("obesity_form"):
+    st.subheader("Masukkan Data Anda")
 
-# Label encoding manual sesuai urutan LabelEncoder saat training
-label_maps = {
-    "Gender": {"Female": 0, "Male": 1},
-    "FAVC": {"no": 0, "yes": 1},
-    "SCC": {"no": 0, "yes": 1},
-    "SMOKE": {"no": 0, "yes": 1},
-    "family_history_with_overweight": {"no": 0, "yes": 1},
-    "CALC": {"no": 0, "Sometimes": 1, "Frequently": 2, "Always": 3},
-    "CAEC": {"no": 0, "Sometimes": 1, "Frequently": 2, "Always": 3},
-    "MTRANS": {
-        "Public_Transportation": 3,
-        "Walking": 4,
-        "Automobile": 0,
-        "Motorbike": 2,
-        "Bike": 1
+    user_input = {
+        "Age": st.slider("Usia", 10, 100, 25),
+        "Gender": st.selectbox("Jenis Kelamin", ["Female", "Male"]),
+        "Height": st.number_input("Tinggi Badan (m)", 1.0, 2.5, 1.70),
+        "Weight": st.number_input("Berat Badan (kg)", 30.0, 200.0, 70.0),
+        "CALC": st.selectbox("Konsumsi Alkohol", ["no", "Sometimes", "Frequently", "Always"]),
+        "FAVC": st.selectbox("Makanan Tinggi Kalori?", ["yes", "no"]),
+        "FCVC": st.slider("Frekuensi Konsumsi Sayur (1-3)", 1, 3, 2),
+        "NCP": st.slider("Jumlah Makan per Hari (1-4)", 1, 4, 3),
+        "SCC": st.selectbox("Monitoring Kalori?", ["yes", "no"]),
+        "SMOKE": st.selectbox("Merokok?", ["yes", "no"]),
+        "CH2O": st.slider("Konsumsi Air (liter/hari)", 1, 3, 2),
+        "family_history_with_overweight": st.selectbox("Riwayat Obesitas Keluarga?", ["yes", "no"]),
+        "FAF": st.slider("Aktivitas Fisik (jam/minggu)", 0, 10, 2),
+        "TUE": st.slider("Waktu Hiburan/Layar (jam/hari)", 0, 5, 1),
+        "CAEC": st.selectbox("Kebiasaan Camilan", ["no", "Sometimes", "Frequently", "Always"]),
+        "MTRANS": st.selectbox("Transportasi", ["Public_Transportation", "Walking", "Automobile", "Motorbike", "Bike"])
     }
-}
 
-# Encode input
-input_df = pd.DataFrame([user_input])
-for col, mapping in label_maps.items():
-    input_df[col] = input_df[col].map(mapping)
+    submitted = st.form_submit_button("Prediksi")
 
-# Prediksi
-try:
-    prediction = model.predict(input_df)[0]
-    st.success(f"Status Obesitas: **{prediction}**")
-except Exception as e:
-    st.error(f"Terjadi kesalahan saat prediksi: {e}")
+if submitted:
+    # Label encoding manual
+    label_maps = {
+        "Gender": {"Female": 0, "Male": 1},
+        "FAVC": {"no": 0, "yes": 1},
+        "SCC": {"no": 0, "yes": 1},
+        "SMOKE": {"no": 0, "yes": 1},
+        "family_history_with_overweight": {"no": 0, "yes": 1},
+        "CALC": {"no": 0, "Sometimes": 1, "Frequently": 2, "Always": 3},
+        "CAEC": {"no": 0, "Sometimes": 1, "Frequently": 2, "Always": 3},
+        "MTRANS": {
+            "Public_Transportation": 3,
+            "Walking": 4,
+            "Automobile": 0,
+            "Motorbike": 2,
+            "Bike": 1
+        }
+    }
+
+    # Encode input
+    input_df = pd.DataFrame([user_input])
+    for col, mapping in label_maps.items():
+        input_df[col] = input_df[col].map(mapping)
+
+    # Prediksi
+    try:
+        prediction = model.predict(input_df)[0]
+        st.subheader(" Hasil Prediksi:")
+        st.success(f"Status Obesitas Anda: **{prediction}**")
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat prediksi: {e}")
