@@ -3,7 +3,7 @@ import pandas as pd
 import joblib
 
 # Load model
-pipeline = joblib.load("model.pkl")
+pipeline = joblib.load("best_rf_model.pkl")
 model = pipeline["model"]
 encoders = pipeline["encoders"]
 target_encoder = pipeline["target_encoder"]
