@@ -6,9 +6,9 @@ st.set_page_config(page_title="Prediksi Obesitas", layout="centered")
 st.title(" Prediksi Kategori Obesitas")
 
 # Load model
-model = joblib.load("best_rf_model.pkl")  # diasumsikan hanya berisi model
+model = joblib.load("best_rf_model.pkl")
 
-# Input pengguna
+# Input form
 with st.form("obesity_form"):
     st.subheader("Masukkan Data Anda")
 
@@ -33,8 +33,30 @@ with st.form("obesity_form"):
 
     submitted = st.form_submit_button("Prediksi")
 
+# Mapping LabelEncoder target (0–6 → kategori)
+label_mapping = {
+    0: "Insufficient_Weight",
+    1: "Normal_Weight",
+    2: "Overweight_Level_I",
+    3: "Overweight_Level_II",
+    4: "Obesity_Type_I",
+    5: "Obesity_Type_II",
+    6: "Obesity_Type_III"
+}
+
+# Mapping label ke tampilan umum
+kategori_sederhana = {
+    "Insufficient_Weight": "Tidak Obesitas",
+    "Normal_Weight": "Tidak Obesitas",
+    "Overweight_Level_I": "Cenderung Obesitas",
+    "Overweight_Level_II": "Cenderung Obesitas",
+    "Obesity_Type_I": "Obesitas",
+    "Obesity_Type_II": "Obesitas",
+    "Obesity_Type_III": "Obesitas"
+}
+
 if submitted:
-    # Label encoding manual
+    # Manual encoding sesuai pelatihan
     label_maps = {
         "Gender": {"Female": 0, "Male": 1},
         "FAVC": {"no": 0, "yes": 1},
@@ -52,15 +74,17 @@ if submitted:
         }
     }
 
-    # Encode input
     input_df = pd.DataFrame([user_input])
     for col, mapping in label_maps.items():
         input_df[col] = input_df[col].map(mapping)
 
-    # Prediksi
     try:
         prediction = model.predict(input_df)[0]
+        label_penuh = label_mapping.get(prediction, "Tidak diketahui")
+        label_sederhana = kategori_sederhana.get(label_penuh, "Tidak diketahui")
+
         st.subheader(" Hasil Prediksi:")
-        st.success(f"Status Obesitas Anda: **{prediction}**")
+        st.info(f"Kategori: **{label_penuh.replace('_', ' ')}**")
+        st.success(f"Kesimpulan: **{label_sederhana}**")
     except Exception as e:
         st.error(f"Terjadi kesalahan saat prediksi: {e}")
