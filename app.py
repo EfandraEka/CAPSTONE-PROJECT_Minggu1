@@ -3,31 +3,31 @@ import pandas as pd
 import joblib
 
 st.set_page_config(page_title="Prediksi Obesitas", layout="centered")
-st.title(" Prediksi Kategori Obesitas")
+st.title(" Prediksi Kategori Obesitas Berdasarkan Gaya Hidup")
 
-# Load pipeline (harus dictionary berisi model dan encoders)
-pipeline = joblib.load("best_rf_model.pkl")
+# Load pipeline model
+pipeline = joblib.load("model.pkl")
 model = pipeline["model"]
 encoders = pipeline["encoders"]
 target_encoder = pipeline["target_encoder"]
 features = pipeline["feature_names"]
 
-# Ambil input dari user (16 fitur)
+# Input dari pengguna
 user_input = {
     "Age": st.slider("Usia", 10, 100, 25),
     "Gender": st.selectbox("Jenis Kelamin", encoders["Gender"].classes_),
     "Height": st.number_input("Tinggi Badan (m)", 1.0, 2.5, 1.70),
     "Weight": st.number_input("Berat Badan (kg)", 30.0, 200.0, 70.0),
     "CALC": st.selectbox("Konsumsi Alkohol", encoders["CALC"].classes_),
-    "FAVC": st.selectbox("Makan Tinggi Kalori?", encoders["FAVC"].classes_),
-    "FCVC": st.slider("Frekuensi Sayur (1-3)", 1, 3, 2),
+    "FAVC": st.selectbox("Makanan Tinggi Kalori?", encoders["FAVC"].classes_),
+    "FCVC": st.slider("Frekuensi Konsumsi Sayur (1-3)", 1, 3, 2),
     "NCP": st.slider("Jumlah Makan per Hari (1-4)", 1, 4, 3),
-    "SCC": st.selectbox("Pantau Kalori?", encoders["SCC"].classes_),
+    "SCC": st.selectbox("Monitoring Kalori?", encoders["SCC"].classes_),
     "SMOKE": st.selectbox("Merokok?", encoders["SMOKE"].classes_),
-    "CH2O": st.slider("Konsumsi Air (liter)", 1, 3, 2),
-    "family_history_with_overweight": st.selectbox("Riwayat Obesitas Keluarga?", encoders["family_history_with_overweight"].classes_),
+    "CH2O": st.slider("Konsumsi Air (liter/hari)", 1, 3, 2),
+    "family_history_with_overweight": st.selectbox("Riwayat Obesitas di Keluarga?", encoders["family_history_with_overweight"].classes_),
     "FAF": st.slider("Aktivitas Fisik (jam/minggu)", 0, 10, 2),
-    "TUE": st.slider("Waktu Hiburan (jam/hari)", 0, 5, 1),
+    "TUE": st.slider("Waktu Hiburan/Layar (jam/hari)", 0, 5, 1),
     "CAEC": st.selectbox("Kebiasaan Camilan", encoders["CAEC"].classes_),
     "MTRANS": st.selectbox("Transportasi", encoders["MTRANS"].classes_)
 }
