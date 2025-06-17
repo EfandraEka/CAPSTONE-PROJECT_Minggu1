@@ -6,7 +6,7 @@ st.set_page_config(page_title="Prediksi Obesitas", layout="centered")
 st.title(" Prediksi Kategori Obesitas")
 
 # Load model
-model = joblib.load("best_rf_model.pkl")
+model = joblib.load("best_rf_model_clean.pkl")
 
 # Input form
 with st.form("obesity_form"):
@@ -33,7 +33,7 @@ with st.form("obesity_form"):
 
     submitted = st.form_submit_button("Prediksi")
 
-# Mapping LabelEncoder target (0–6 → kategori)
+# Mapping hasil model ke label klasifikasi
 label_mapping = {
     0: "Insufficient_Weight",
     1: "Normal_Weight",
@@ -44,7 +44,7 @@ label_mapping = {
     6: "Obesity_Type_III"
 }
 
-# Mapping label ke tampilan umum
+# Kesimpulan sederhananya
 kategori_sederhana = {
     "Insufficient_Weight": "Tidak Obesitas",
     "Normal_Weight": "Tidak Obesitas",
@@ -56,35 +56,46 @@ kategori_sederhana = {
 }
 
 if submitted:
-    # Manual encoding sesuai pelatihan
-    label_maps = {
-        "Gender": {"Female": 0, "Male": 1},
-        "FAVC": {"no": 0, "yes": 1},
-        "SCC": {"no": 0, "yes": 1},
-        "SMOKE": {"no": 0, "yes": 1},
-        "family_history_with_overweight": {"no": 0, "yes": 1},
-        "CALC": {"no": 0, "Sometimes": 1, "Frequently": 2, "Always": 3},
-        "CAEC": {"no": 0, "Sometimes": 1, "Frequently": 2, "Always": 3},
-        "MTRANS": {
-            "Public_Transportation": 3,
-            "Walking": 4,
-            "Automobile": 0,
-            "Motorbike": 2,
-            "Bike": 1
-        }
-    }
-
-    input_df = pd.DataFrame([user_input])
-    for col, mapping in label_maps.items():
-        input_df[col] = input_df[col].map(mapping)
-
     try:
+        # Encode sesuai pelatihan
+        label_maps = {
+            "Gender": {"Female": 0, "Male": 1},
+            "FAVC": {"no": 0, "yes": 1},
+            "SCC": {"no": 0, "yes": 1},
+            "SMOKE": {"no": 0, "yes": 1},
+            "family_history_with_overweight": {"no": 0, "yes": 1},
+            "CALC": {"no": 0, "Sometimes": 1, "Frequently": 2, "Always": 3},
+            "CAEC": {"no": 0, "Sometimes": 1, "Frequently": 2, "Always": 3},
+            "MTRANS": {
+                "Public_Transportation": 3,
+                "Walking": 4,
+                "Automobile": 0,
+                "Motorbike": 2,
+                "Bike": 1
+            }
+        }
+
+        input_df = pd.DataFrame([user_input])
+
+        for col, mapping in label_maps.items():
+            input_df[col] = input_df[col].map(mapping)
+
+        # Urutan fitur harus sesuai dengan training
+        feature_order = [
+            "Gender", "Age", "Height", "Weight", "family_history_with_overweight",
+            "FAVC", "FCVC", "NCP", "CAEC", "SMOKE", "CH2O", "SCC",
+            "FAF", "TUE", "CALC", "MTRANS"
+        ]
+
+        input_df = input_df[feature_order]
+
         prediction = model.predict(input_df)[0]
         label_penuh = label_mapping.get(prediction, "Tidak diketahui")
         label_sederhana = kategori_sederhana.get(label_penuh, "Tidak diketahui")
 
-        st.subheader(" Hasil Prediksi:")
+        st.subheader("Hasil Prediksi:")
         st.info(f"Kategori: **{label_penuh.replace('_', ' ')}**")
         st.success(f"Kesimpulan: **{label_sederhana}**")
+
     except Exception as e:
-        st.error(f"Terjadi kesalahan saat prediksi: {e}")
+        st.error(f"Terjadi kesalahan saat memproses input: {e}")
