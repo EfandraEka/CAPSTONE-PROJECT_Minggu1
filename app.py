@@ -21,7 +21,7 @@ with st.form("form_obesitas"):
     # Input
     age = st.slider("Usia", 10, 100, 25)
     gender = st.selectbox("Jenis Kelamin", ["Female", "Male"])
-    height = st.number_input("Tinggi Badan (meter)", min_value=1.00, max_value=2.50, value=1.65)
+    height_cm = st.number_input("Tinggi Badan (cm)", min_value=100, max_value=250, value=165)
     weight = st.number_input("Berat Badan (kg)", min_value=20.0, max_value=200.0, value=65.0)
 
     calc = st.selectbox("Konsumsi Alkohol", ["no", "Sometimes", "Frequently", "Always"])
@@ -40,7 +40,10 @@ with st.form("form_obesitas"):
     submit = st.form_submit_button("Prediksi")
 
 if submit:
-    # Encoding kategorikal
+    # === Konversi dan encoding ===
+    height = height_cm / 100  # Konversi ke meter
+    bmi = weight / (height ** 2)
+
     gender = 1 if gender == "Male" else 0
     family_history = 1 if family_history == "yes" else 0
     favc = 1 if favc == "yes" else 0
@@ -61,25 +64,21 @@ if submit:
     caec = caec_map[caec]
     mtrans = mtrans_map[mtrans]
 
-    # Data input
-    data = np.array([[age, gender, height, weight,
+    # === Buat vektor fitur dengan BMI ditambahkan ===
+    data = np.array([[age, gender, height, weight, bmi,
                       calc, favc, fcvc, ncp,
                       scc, smoke, ch2o, family_history,
                       faf, tue, caec, mtrans]])
 
+    # Scaling dan prediksi
     try:
         scaled = scaler.transform(data)
-    except Exception as e:
-        st.error(f"Kesalahan saat melakukan scaling: {e}")
-        st.stop()
-
-    try:
         pred = model.predict(scaled)[0]
     except Exception as e:
-        st.error(f"Kesalahan saat melakukan prediksi: {e}")
+        st.error(f"Terjadi kesalahan saat prediksi: {e}")
         st.stop()
 
-    # Label hasil
+    # Label dan penjelasan
     label = {
         0: "Insufficient Weight",
         1: "Normal Weight",
@@ -97,8 +96,6 @@ if submit:
         "Obesity Type I": "Tingkat obesitas. Konsultasikan dengan ahli gizi atau dokter.",
         "Obesity Type II": "Obesitas tingkat lanjut. Perlu penanganan medis serius."
     }
-
-    bmi = weight / (height ** 2)
 
     st.markdown("---")
     st.metric(label="BMI Anda", value=f"{bmi:.2f}")
