@@ -1,40 +1,40 @@
 import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder
 import joblib
 
 # Load dataset
 df = pd.read_csv("ObesityDataSet.csv")
 
-# Fitur kategorikal yang perlu encoding
-categorical_cols = ['Gender', 'CALC', 'FAVC', 'SCC', 'SMOKE',
-                    'family_history_with_overweight', 'CAEC', 'MTRANS']
-
-# Simpan encoder
-encoders = {}
-for col in categorical_cols:
-    le = LabelEncoder()
-    df[col] = le.fit_transform(df[col])
-    encoders[col] = le
-
-# Encode target label
-target_encoder = LabelEncoder()
-df["NObeyesdad"] = target_encoder.fit_transform(df["NObeyesdad"])
-
-# Fitur & target
-X = df.drop("NObeyesdad", axis=1)
+# Target
 y = df["NObeyesdad"]
+X = df.drop("NObeyesdad", axis=1)
 
-# Latih model
-model = RandomForestClassifier(random_state=42)
-model.fit(X, y)
+# Fitur numerik dan kategorikal
+numerical_cols = ["Age", "Height", "Weight", "FCVC", "NCP", "CH2O", "FAF", "TUE"]
+categorical_cols = [col for col in X.columns if col not in numerical_cols]
 
-# Simpan semua dalam satu dict
-joblib.dump({
-    "model": model,
-    "encoders": encoders,
-    "target_encoder": target_encoder,
-    "feature_names": X.columns.tolist()
-}, "model.pkl")
+# Preprocessing pipeline
+preprocessor = ColumnTransformer(transformers=[
+    ("num", StandardScaler(), numerical_cols),
+    ("cat", OrdinalEncoder(), categorical_cols)
+])
 
-print(" Model berhasil disimpan ke model.pkl")
+# Final pipeline: preprocessing + model
+model_pipeline = Pipeline([
+    ("preprocessing", preprocessor),
+    ("classifier", RandomForestClassifier(n_estimators=100, random_state=42))
+])
+
+# Train/test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Fit model
+model_pipeline.fit(X_train, y_train)
+
+# Save full pipeline
+joblib.dump(model_pipeline, "best_rf_model_clean.pkl")
+print("Model pipeline saved to best_rf_model_clean.pkl")
