@@ -2,14 +2,15 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# Konfigurasi halaman
 st.set_page_config(page_title="Prediksi Obesitas", layout="centered")
-st.title("Prediksi Kategori Obesitas")
+st.title(" Prediksi Kategori Obesitas")
 
 # Load model dan scaler
-scaler, model = joblib.load("best_rf_model_clean.pkl")
+model_data = joblib.load("best_rf_model_clean.pkl")
+model = model_data["model"]
+scaler = model_data["scaler"]
 
-# Form input
+# Input form
 with st.form("obesity_form"):
     st.subheader("Masukkan Data Anda")
 
@@ -34,7 +35,7 @@ with st.form("obesity_form"):
 
     submitted = st.form_submit_button("Prediksi")
 
-# Mapping label hasil prediksi
+# Mapping hasil model ke label klasifikasi
 label_mapping = {
     0: "Insufficient_Weight",
     1: "Normal_Weight",
@@ -45,7 +46,7 @@ label_mapping = {
     6: "Obesity_Type_III"
 }
 
-# Ringkasan sederhana
+# Kesimpulan sederhananya
 kategori_sederhana = {
     "Insufficient_Weight": "Tidak Obesitas",
     "Normal_Weight": "Tidak Obesitas",
@@ -58,7 +59,6 @@ kategori_sederhana = {
 
 if submitted:
     try:
-        # Manual encoding label
         label_maps = {
             "Gender": {"Female": 0, "Male": 1},
             "FAVC": {"no": 0, "yes": 1},
@@ -80,7 +80,7 @@ if submitted:
         for col, mapping in label_maps.items():
             input_df[col] = input_df[col].map(mapping)
 
-        # Urutan kolom sesuai training
+        # Urutkan fitur agar sesuai dengan pelatihan
         feature_order = [
             "Gender", "Age", "Height", "Weight", "family_history_with_overweight",
             "FAVC", "FCVC", "NCP", "CAEC", "SMOKE", "CH2O", "SCC",
@@ -88,7 +88,7 @@ if submitted:
         ]
         input_df = input_df[feature_order]
 
-        # Scaling input
+        # Scaling
         input_scaled = scaler.transform(input_df)
 
         # Prediksi
@@ -96,10 +96,9 @@ if submitted:
         label_penuh = label_mapping.get(prediction, "Tidak diketahui")
         label_sederhana = kategori_sederhana.get(label_penuh, "Tidak diketahui")
 
-        # Tampilkan hasil
         st.subheader("Hasil Prediksi:")
         st.info(f"Kategori: **{label_penuh.replace('_', ' ')}**")
         st.success(f"Kesimpulan: **{label_sederhana}**")
 
     except Exception as e:
-        st.error(f"Terjadi kesalahan saat prediksi: {e}")
+        st.error(f"Terjadi kesalahan saat memproses input: {e}")
