@@ -2,10 +2,11 @@ import streamlit as st
 import pandas as pd
 import joblib
 
+# Konfigurasi halaman
 st.set_page_config(page_title="Prediksi Obesitas", layout="centered")
 st.title("Prediksi Kategori Obesitas")
 
-# Load scaler dan model dari file .pkl
+# Load model dan scaler
 scaler, model = joblib.load("best_rf_model_clean.pkl")
 
 # Form input
@@ -33,7 +34,7 @@ with st.form("obesity_form"):
 
     submitted = st.form_submit_button("Prediksi")
 
-# Mapping hasil model ke label klasifikasi
+# Mapping label hasil prediksi
 label_mapping = {
     0: "Insufficient_Weight",
     1: "Normal_Weight",
@@ -44,7 +45,7 @@ label_mapping = {
     6: "Obesity_Type_III"
 }
 
-# Kesimpulan sederhana
+# Ringkasan sederhana
 kategori_sederhana = {
     "Insufficient_Weight": "Tidak Obesitas",
     "Normal_Weight": "Tidak Obesitas",
@@ -57,7 +58,7 @@ kategori_sederhana = {
 
 if submitted:
     try:
-        # Manual encoding sesuai pelatihan
+        # Manual encoding label
         label_maps = {
             "Gender": {"Female": 0, "Male": 1},
             "FAVC": {"no": 0, "yes": 1},
@@ -79,7 +80,7 @@ if submitted:
         for col, mapping in label_maps.items():
             input_df[col] = input_df[col].map(mapping)
 
-        # Urutkan sesuai fitur saat training
+        # Urutan kolom sesuai training
         feature_order = [
             "Gender", "Age", "Height", "Weight", "family_history_with_overweight",
             "FAVC", "FCVC", "NCP", "CAEC", "SMOKE", "CH2O", "SCC",
@@ -87,14 +88,15 @@ if submitted:
         ]
         input_df = input_df[feature_order]
 
-        # Scaling numerik
+        # Scaling input
         input_scaled = scaler.transform(input_df)
 
         # Prediksi
-        pred_label = model.predict(input_scaled)[0]
-        label_penuh = label_mapping.get(pred_label, "Tidak diketahui")
+        prediction = model.predict(input_scaled)[0]
+        label_penuh = label_mapping.get(prediction, "Tidak diketahui")
         label_sederhana = kategori_sederhana.get(label_penuh, "Tidak diketahui")
 
+        # Tampilkan hasil
         st.subheader("Hasil Prediksi:")
         st.info(f"Kategori: **{label_penuh.replace('_', ' ')}**")
         st.success(f"Kesimpulan: **{label_sederhana}**")
