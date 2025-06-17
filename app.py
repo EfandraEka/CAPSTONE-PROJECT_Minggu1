@@ -7,7 +7,7 @@ st.set_page_config(page_title="Prediksi Obesitas", layout="centered")
 st.title("Prediksi Kategori Obesitas")
 
 # Load model dan scaler
-scaler, model = joblib.load("best_rf_model.pkl")
+scaler, model = joblib.load("best_rf_model_clean.pkl")
 
 # Form input
 with st.form("obesity_form"):
